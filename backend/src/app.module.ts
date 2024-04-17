@@ -1,5 +1,8 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
+import {
+  EntityCaseNamingStrategy,
+  PostgreSqlDriver,
+} from '@mikro-orm/postgresql';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
@@ -24,9 +27,11 @@ import { UsersModule } from './users/users.module';
         host: configService.get('POSTGRES_HOST'),
         port: parseInt(<string>configService.get('POSTGRES_PORT')),
         dbName: <string>configService.get('POSTGRES_DATABASE'),
+        password: <string>configService.get('POSTGRES_PASSWORD'),
         schema: 'public',
         driver: PostgreSqlDriver,
-        autoLoadEntities: true,
+        allowGlobalContext: true,
+        namingStrategy: EntityCaseNamingStrategy,
       }),
     }),
     UsersModule,
