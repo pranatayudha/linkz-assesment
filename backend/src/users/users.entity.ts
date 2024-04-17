@@ -22,18 +22,18 @@ export class UsersEntity {
   @Property()
   password: string;
 
-  @Property({ onUpdate: () => new Date() })
-  latestLogin = new Date();
+  @Property({ nullable: true })
+  latestLogin: Date;
 
   @Property({ default: false })
   delFlag: boolean;
 
   @Property({ onCreate: () => new Date() })
-  createdAt = new Date();
+  createdAt: Date;
 
   @Property({
     onCreate: () => new Date(),
     onUpdate: () => new Date(),
   })
-  updatedAt = new Date();
+  updatedAt: Date;
 }
