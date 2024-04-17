@@ -1,5 +1,3 @@
-import * as bcrypt from 'bcrypt';
-import * as uuid from 'uuid';
 import { EntityManager, wrap } from '@mikro-orm/core';
 import {
   BadRequestException,
@@ -7,18 +5,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { validate } from 'class-validator';
+import * as uuid from 'uuid';
+import { LoginRequestDto } from './dtos/login-request.dto';
+import { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterRequestDto } from './dtos/register-request.dto';
 import { RegisterResponseDto } from './dtos/register-response.dto';
 import { UsersEntity } from './users.entity';
 import { UsersRepository } from './users.repository';
-import { LoginRequestDto } from './dtos/login-request.dto';
-import { LoginResponseDto } from './dtos/login-response.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly em: EntityManager,
+    private readonly jwtService: JwtService,
     private readonly usersRepository: UsersRepository,
   ) {}
 
@@ -59,6 +61,8 @@ export class UsersService {
       username: payload.username,
     });
 
+    let jwtSignPayload = null;
+
     if (!user) {
       throw new NotFoundException('User not found!');
     } else {
@@ -75,14 +79,36 @@ export class UsersService {
 
         wrap(user).assign(updateUser);
         await this.em.flush();
+
+        jwtSignPayload = {
+          username: updateUser.username,
+          uid: updateUser.uid,
+          latestLogin: updateUser.latestLogin,
+        };
       }
     }
 
+    const accessToken = this.jwtService.sign(jwtSignPayload, {
+      expiresIn: '1h',
+      secret: 'linkz-assesment-api',
+    });
+
     return {
       success: true,
-      data: user,
+      data: {
+        username: user.username,
+        accessToken,
+        latestLogin: user.latestLogin,
+      },
       message: 'Success! You are logged in.',
       code: HttpStatus.OK,
     };
+  }
+
+  async getUser(payload: any): Promise<UsersEntity> {
+    return this.usersRepository.findOne({
+      username: payload.username,
+      latestLogin: payload.latestLogin,
+    });
   }
 }

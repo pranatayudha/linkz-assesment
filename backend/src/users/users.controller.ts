@@ -1,9 +1,12 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { GetUser } from 'src/auth/get-user-decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { LoginRequestDto } from './dtos/login-request.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { RegisterRequestDto } from './dtos/register-request.dto';
 import { RegisterResponseDto } from './dtos/register-response.dto';
+import { UsersEntity } from './users.entity';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -45,5 +48,13 @@ export class UsersController {
     @Body() loginRequestDto: LoginRequestDto,
   ): Promise<LoginResponseDto> {
     return this.usersService.login(loginRequestDto);
+  }
+
+  // * This request is made only for the example of using Authorization with Bearer token from JWT.
+  @Get()
+  @ApiBearerAuth('Authorization')
+  @UseGuards(JwtAuthGuard)
+  async get(@GetUser() user: UsersEntity) {
+    return user;
   }
 }
